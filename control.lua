@@ -1,7 +1,8 @@
 --------------------------------------------------------------------------------
 -- control.lua - Factorio 2.0
--- This script is extended from github(intellicintegration/Factorio-MQTT-Notify)
--- Orginal mod by: Mario Gonsales Ishikawa
+-- This project is based on intellicintegration/Factorio-MQTT-Notify from github.
+-- Copyright: Mario Gonsales Ishikawa
+-- License: Apache License 2.0
 -- Tracks existing/new machines, writes a single JSON file "factory_state.json"
 -- with production, pollution, fluids, inventory, etc.
 -- 
@@ -77,7 +78,6 @@ local function remove_asset(entity)
     global.assets[entity.unit_number] = nil
   end
 end
-
 --------------------------------------------------------------------------------
 -- 5) Find existing assets (scan the map)
 --------------------------------------------------------------------------------
@@ -116,6 +116,7 @@ script.on_event(defines.events.on_tick, function(event)
     global.scanned = true
   end
 end)
+
 
 --------------------------------------------------------------------------------
 -- 9) Handle newly built or removed entities
