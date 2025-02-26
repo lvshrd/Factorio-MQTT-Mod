@@ -1,60 +1,13 @@
 --------------------------------------------------------------------------------
 -- control.lua - Factorio 2.0
+-- This script is extended from github(intellicintegration/Factorio-MQTT-Notify)
+-- Orginal mod by: Mario Gonsales Ishikawa
 -- Tracks existing/new machines, writes a single JSON file "factory_state.json"
 -- with production, pollution, fluids, inventory, etc.
 -- 
 -- Key feature: Scans for existing entities on the first tick after load (if not
 -- already scanned) to populate global.assets with old saves' machines.
 --------------------------------------------------------------------------------
-
---------------------------------------------------------------------------------
--- 1) Basic JSON encoder since `game.table_to_json()` is gone in 2.0
---------------------------------------------------------------------------------
-local function encode_json(value)
-  local t = type(value)
-  if t == "table" then
-    -- Determine if this table is an array or object
-    local is_array = true
-    local max_index = 0
-    for k, v in pairs(value) do
-      if type(k) ~= "number" then
-        is_array = false
-        break
-      else
-        if k > max_index then
-          max_index = k
-        end
-      end
-    end
-
-    if is_array then
-      local items = {}
-      for i = 1, max_index do
-        table.insert(items, encode_json(value[i]))
-      end
-      return "[" .. table.concat(items, ",") .. "]"
-    else
-      local fields = {}
-      for k, v in pairs(value) do
-        local key_str = encode_json(tostring(k)) .. ":" .. encode_json(v)
-        table.insert(fields, key_str)
-      end
-      return "{" .. table.concat(fields, ",") .. "}"
-    end
-
-  elseif t == "string" then
-    -- Escape backslashes and quotes
-    local escaped = value:gsub("\\", "\\\\"):gsub("\"", "\\\"")
-    return "\"" .. escaped .. "\""
-
-  elseif t == "number" or t == "boolean" then
-    return tostring(value)
-
-  else
-    -- For nil, function, userdata, etc., return "null"
-    return "null"
-  end
-end
 
 --------------------------------------------------------------------------------
 -- 2) Ensure global tables
@@ -336,7 +289,7 @@ end
 
 local function write_snapshot_to_file()
   local snapshot = build_snapshot()
-  local json_str = encode_json(snapshot)
+  local json_str = helpers.table_to_json(snapshot)
   helpers.write_file("factory_state.json", json_str, false)
 end
 
