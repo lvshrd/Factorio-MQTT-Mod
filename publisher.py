@@ -49,7 +49,6 @@ def publish_no_matter(client, subtopic, payload,log_file):
     Publish 'payload' to 'subtopic' unconditionally.
     """
     client.publish(subtopic, payload)
-    last_published[subtopic] = payload
     log_file.write(f"Published to {subtopic}: {payload}\n")
 
 def publish_json(client, subtopic, value,log_file):
@@ -62,21 +61,21 @@ def publish_json(client, subtopic, value,log_file):
 
 # 1) Category map
 TYPE_TO_CATEGORY = {
-    "assembling-machine": "machines",
-    "furnace":            "machines",
-    "mining-drill":       "machines",
-    "boiler":             "machines",   # Added boiler
-    "pump":               "machines",   # Added pump
-    "generator":          "machines",   # Added generator (steam engine)
-    
-    "container":          "storage",
-    "logistic-container": "storage",
-    "car":                "storage",
-    "cargo-wagon":        "storage",
-    "fluid-wagon":        "storage",
-    "locomotive":         "storage",
-    "spider-vehicle":     "storage",
-    "roboport":           "storage",
+    "assembling-machine": "Assembly",
+    "furnace":            "Smelting",
+    "mining-drill":       "Mining",
+    "boiler":             "PowerGeneration",
+    "pump":               "PowerGeneration",
+    "generator":          "PowerGeneration",
+    "electric-pole":      "PowerGeneration",
+    "container":          "Storage",
+    "logistic-container": "Storage",
+    "car":                "Transport",
+    "cargo-wagon":        "Transport",
+    "fluid-wagon":        "Transport",
+    "locomotive":         "Transport",
+    "spider-vehicle":     "Transport",
+    "roboport":           "Logistics",
 }
 
 
@@ -132,7 +131,7 @@ def on_connect(client, userdata, flags, reason_code, properties=None):
 
 def connect_mqtt():
     client = mqtt_client.Client()
-    client.username_pw_set(ADMIN, PASSWORD) # change this to your MQTT broker username and password
+    client.username_pw_set(ADMIN, PASSWORD)
     client.on_connect = on_connect
     client.connect(BROKER, PORT, keepalive=60)
     print("Connecting to MQTT broker...")
@@ -141,10 +140,10 @@ def connect_mqtt():
 def publish_asset_list(client, asset_groups,log_file):
     """
     For each (category, type_slug), publish the array of IDs (as JSON).
-    E.g. factorio/machines/mining_drill => '[{"id":14},{"id":20}]'
+    E.g. factorio/Mining/line_123/mining_drill => '[{"id":14},{"id":20}]'
     """
-    for (category, type_slug), id_list in asset_groups.items():
-        topic = f"{TOPIC_PREFIX}/{category}/{type_slug}"
+    for (category,line_id, type_slug), id_list in asset_groups.items():
+        topic = f"{TOPIC_PREFIX}/{category}/{line_id}/{type_slug}"
         # 'id_list' is a Python list like: [ {"id":14}, {"id":20} ]
         publish_json(client, topic, id_list,log_file)
 
@@ -162,8 +161,10 @@ def publish_asset_data(client, asset,log_file):
     asset_type = asset.get("type", "unknown")
     category   = TYPE_TO_CATEGORY.get(asset_type, "other")
     type_slug  = asset_type.replace('-', '_')
+    line_id = asset.get("line_id", "Isolated")  # Get Line ID，default "Isolated"
+    type_plus_id = type_slug + "-" + str(asset_id)
 
-    base_topic = f"{TOPIC_PREFIX}/{category}/{type_slug}/{asset_id}"
+    base_topic = f"{TOPIC_PREFIX}/{category}/{line_id}/{type_plus_id}"
 
     # 1) Basic info
     publish_json(client, f"{base_topic}/id", str(asset_id),log_file)
@@ -206,7 +207,6 @@ def publish_asset_data(client, asset,log_file):
     else:
         publish_json(client, f"{inventory_topic_prefix}", str(inventory),log_file)
 
-
     # 6) Fluids
     fluids = asset.get("fluids", [])
     # If you want each fluid box in a single array, you can do:
@@ -215,6 +215,11 @@ def publish_asset_data(client, asset,log_file):
     for i, fluid in enumerate(fluids):
         fluid_topic = f"{base_topic}/fluids/box_{i}"
         publish_json(client, fluid_topic, fluid if fluid else "empty",log_file)
+
+    # 7) NEW: Electrical
+    electric = asset.get("electric",{})
+    electric_topic_prefix = f"{base_topic}/electric"
+    publish_json(client,f"{electric_topic_prefix}", electric, log_file)
 
 def main():
     client = connect_mqtt()
@@ -226,7 +231,6 @@ def main():
         time.sleep(2)
         if not os.path.exists(FACTORY_STATE_FILE):
             continue
-
         mtime = os.path.getmtime(FACTORY_STATE_FILE)
         if mtime > last_mtime:
             last_mtime = mtime
@@ -248,17 +252,17 @@ def main():
                     for asset in assets:
                         a_type     = asset.get("type", "unknown")
                         category   = TYPE_TO_CATEGORY.get(a_type, "other")
+                        line_id = asset.get("line_id", "Isolated")  # get Line ID
                         type_slug  = a_type.replace('-', '_')
                         asset_id   = asset.get("id", asset.get("unit_number", "unknown_id"))
 
-                        key = (category, type_slug)
+                        key = (category, line_id, type_slug)
                         if key not in asset_groups:
                             asset_groups[key] = []
                         asset_groups[key].append({"id": asset_id})
 
                     # 2) Publish array of IDs for each (category,type_slug)
                     publish_asset_list(client, asset_groups,log_file)
-
                     # 3) Publish subtopics for each asset
                     for asset in assets:
                         publish_asset_data(client, asset,log_file)

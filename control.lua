@@ -1,13 +1,20 @@
 --------------------------------------------------------------------------------
--- control.lua - Factorio 2.0
+-- control.lua -mod for Factorio 2.0
 -- This project is based on intellicintegration/Factorio-MQTT-Notify from github.
--- Copyright: Mario Gonsales Ishikawa
+-- From: Mario Gonsales Ishikawa
+-- Modified by lvshrd SUPCON
 -- License: Apache License 2.0
+
 -- Tracks existing/new machines, writes a single JSON file "factory_state.json"
--- with production, pollution, fluids, inventory, etc.
+-- with production, pollution, fluids, inventory, electric etc.
 -- 
--- Key feature: Scans for existing entities on the first tick after load (if not
--- already scanned) to populate global.assets with old saves' machines.
+-- Key feature: 
+-- 1. Scans for existing entities on the first tick after load (if not already
+--  scanned) to populate global.assets with old saves' machines.
+
+-- 2. Identify all substation positions to define production area centers.
+-- Subsequently, assign a unique 'line_id' to each machine within these defined areas, 
+-- corresponding to the respective substation center.
 --------------------------------------------------------------------------------
 SUBSTATION_RADIUS=9
 
@@ -99,12 +106,12 @@ local function register_asset(entity)
     inventory              = {},
     fluids                 = {},
     pollution              = 0,
-    electric_network_statistics ={},
+    electric               = {},
 
     entity_ref             = entity
   }
   if entity.type == "electric-pole" then
-    global.assets[entity.unit_number].electric_network_statistics = entity.electric_network_statistics
+    global.assets[entity.unit_number].electric.electric_network_statistics = entity.electric_network_statistics
     if entity.name == "substation" then
       global.substations[entity.unit_number] = {
         unit_number =     entity.unit_number,
@@ -203,6 +210,7 @@ local function on_entity_removed(event)
   local entity = event.entity
   if entity and entity.valid then
     remove_asset(entity)
+    remove_all_type_entity(entity)
   end
 end
 
@@ -316,8 +324,16 @@ end
 
 local function track_electric(asset)
   local entity = asset.entity_ref
-  if not (entity and entity.valid and entity.type=="electric-pole") then return end
-    asset.electric_network_statistics = entity.electric_network_statistics
+  if not (entity and entity.valid) then return end
+  if (entity.type=="electric-pole") then
+    asset.electric.electric_network_statistics = entity.electric_network_statistics
+    -- if electrical equipment
+  elseif entity.is_connected_to_electric_network() then
+    asset.electric = {
+      energy_usage = entity.prototype.energy_usage,  -- Power, Watt
+      current_energy = entity.energy,                -- Storaged energy (J)
+    }
+  end
 end
 
 --------------------------------------------------------------------------------
@@ -362,7 +378,7 @@ local function build_snapshot()
         inventory              = asset.inventory,
         fluids                 = asset.fluids,
         pollution              = asset.pollution,
-        electric_network_statistics = asset.electric_network_statistics
+        electric               = asset.electric,
       })
     end
   end
