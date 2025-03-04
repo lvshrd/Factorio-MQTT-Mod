@@ -1,6 +1,6 @@
 {
     "name": "sup-MQTT",
-    "version": "1.1.1",
+    "version": "1.2.1",
     "title": "Factorio JSON Snapshot for MQTT",
     "author": "lvshrd",
     "description": "Maintains a single JSON snapshot of production, inventories, pollution, and fluid info for tracked assets.",

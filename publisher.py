@@ -35,7 +35,7 @@ last_published = {}
 
 def publish_if_changed(client, subtopic, new_payload,log_file):
     """
-    Publish 'new_payload' to 'subtopic' only if 'new_payload' differs
+    Publish 'new_payload' to 'subtopic' only if 'new_payload' differs 
     from the last published payload for this subtopic.
     """
     old_payload = last_published.get(subtopic)

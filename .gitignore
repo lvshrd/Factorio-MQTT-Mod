@@ -1,2 +1,4 @@
 config.py
-*.txt
+__pycache__/
+*.pyc
+log_file.txt

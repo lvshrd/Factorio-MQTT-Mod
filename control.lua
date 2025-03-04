@@ -9,6 +9,36 @@
 -- Key feature: Scans for existing entities on the first tick after load (if not
 -- already scanned) to populate global.assets with old saves' machines.
 --------------------------------------------------------------------------------
+SUBSTATION_RADIUS=9
+
+--------------------------------------------------------------------------------
+--- 1) Log all the existing entities 
+--------------------------------------------------------------------------------
+All_entity={}
+All_entity.assets={}
+local function register_all_type_entity(entity)
+  -- Some entity dose not have a unit_number
+  All_entity.assets[entity.name] = {
+    unit_number            = entity.unit_number,
+    name                   = entity.name,
+    type                   = entity.type,
+    position               = {x = entity.position.x, y = entity.position.y},
+    surface                = entity.surface,
+    prototype              = entity.prototype,
+    orientation            = entity.orientation,
+    direction              = entity.direction,
+    electric_network_id    = entity.electric_network_id,
+  }
+  if entity.type == "electric-pole" then
+    All_entity.assets[entity.name].electric_network_statistics = entity.electric_network_statistics
+  end
+end
+
+local function remove_all_type_entity(entity)
+  if entity and entity.valid and entity.unit_number then
+    All_entity.assets[entity.unit_number] = nil
+  end
+end
 
 --------------------------------------------------------------------------------
 -- 2) Ensure global tables
@@ -16,6 +46,7 @@
 local function ensure_global_tables()
   if not global then global = {} end
   if not global.assets then global.assets = {} end
+  if not global.substations then global.substations = {} end  -- New Added
   if global.scanned == nil then
     global.scanned = false  -- used to mark if we've done our first-tick scanning
   end
@@ -38,7 +69,8 @@ local TRACKED_TYPES = {
   ["roboport"]           = true,
   ["boiler"]             = true,    -- Added boiler
   ["pump"]               = true,    -- Added pump
-  ["generator"]          = true     -- Added generator (steam engine)
+  ["generator"]          = true,    -- Added generator (steam engine)
+  ["electric-pole"]      = true,    -- Added electric-pole (using substation to center the production line)
 }
 
 local function is_tracked_entity(entity)
@@ -67,17 +99,47 @@ local function register_asset(entity)
     inventory              = {},
     fluids                 = {},
     pollution              = 0,
+    electric_network_statistics ={},
 
     entity_ref             = entity
   }
+  if entity.type == "electric-pole" then
+    global.assets[entity.unit_number].electric_network_statistics = entity.electric_network_statistics
+    if entity.name == "substation" then
+      global.substations[entity.unit_number] = {
+        unit_number =     entity.unit_number,
+        position =        {x = entity.position.x, y = entity.position.y},
+        radius =          SUBSTATION_RADIUS
+      }
+    end
+  end
+
 end
 
 local function remove_asset(entity)
   ensure_global_tables()
   if entity and entity.valid and entity.unit_number then
     global.assets[entity.unit_number] = nil
+    if entity.type == "electric-pole" and entity.name == "substation" then
+      global.substations[entity.unit_number] = nil
+    end
   end
 end
+
+--------------------------------------------------------------------------------
+-- Assign line_ID for entities
+--------------------------------------------------------------------------------
+local function assign_line_id(entity_position)
+  for _, substation in pairs(global.substations) do
+    local dx = math.abs(entity_position.x - substation.position.x)
+    local dy = math.abs(entity_position.y - substation.position.y)
+    if dx <= substation.radius and dy <= substation.radius then
+      return "Line-" .. substation.unit_number
+    end
+  end
+  return "Isolated"
+end
+
 --------------------------------------------------------------------------------
 -- 5) Find existing assets (scan the map)
 --------------------------------------------------------------------------------
@@ -85,6 +147,11 @@ local function find_existing_assets()
   for _, surface in pairs(game.surfaces) do
     local all_entities = surface.find_entities()
     for _, e in pairs(all_entities) do
+      print(all_entities)
+-- ----------------------------------
+-- try to find all the types of entities
+      register_all_type_entity(e)
+-- --------------------------------
       if is_tracked_entity(e) then
         register_asset(e)
       end
@@ -114,6 +181,10 @@ script.on_event(defines.events.on_tick, function(event)
     ensure_global_tables()
     find_existing_assets()
     global.scanned = true
+-------------------------------------------------------------------------------
+    local json_str = helpers.table_to_json(All_entity)
+    helpers.write_file("All_entity_type.json", json_str, false)
+--------------------------------------------------------------------------------
   end
 end)
 
@@ -243,6 +314,12 @@ local function track_fluids(asset)
   asset.fluids = fluids
 end
 
+local function track_electric(asset)
+  local entity = asset.entity_ref
+  if not (entity and entity.valid and entity.type=="electric-pole") then return end
+    asset.electric_network_statistics = entity.electric_network_statistics
+end
+
 --------------------------------------------------------------------------------
 -- 11) Periodic updates to track data and write JSON
 --------------------------------------------------------------------------------
@@ -256,6 +333,7 @@ local function update_all_assets()
       track_status(asset)
       track_pollution(asset)
       track_fluids(asset)
+      track_electric(asset)
     end
   end
 end
@@ -266,12 +344,14 @@ local function build_snapshot()
   for _, asset in pairs(global.assets) do
     local e = asset.entity_ref
     if e and e.valid then
+      local line_id = assign_line_id(asset.position) --Assign line_ID
       table.insert(snapshot.assets, {
         unit_number            = asset.unit_number,
         name                   = asset.name,
         model                  = asset.model,
         type                   = asset.type,
         position               = asset.position,
+        line_id                = line_id,  -- New Added
 
         last_status            = asset.last_status,
         state_changed_tick     = asset.state_changed_tick,
@@ -281,12 +361,14 @@ local function build_snapshot()
 
         inventory              = asset.inventory,
         fluids                 = asset.fluids,
-        pollution              = asset.pollution
+        pollution              = asset.pollution,
+        electric_network_statistics = asset.electric_network_statistics
       })
     end
   end
   return snapshot
 end
+
 
 local function write_snapshot_to_file()
   local snapshot = build_snapshot()
