@@ -111,7 +111,7 @@ local function register_asset(entity)
     entity_ref             = entity
   }
   if entity.type == "electric-pole" then
-    global.assets[entity.unit_number].electric.electric_network_statistics = entity.electric_network_statistics
+    -- global.assets[entity.unit_number].electric.electric_network_statistics = entity.electric_network_statistics
     if entity.name == "substation" then
       global.substations[entity.unit_number] = {
         unit_number =     entity.unit_number,
@@ -141,7 +141,7 @@ local function assign_line_id(entity_position)
     local dx = math.abs(entity_position.x - substation.position.x)
     local dy = math.abs(entity_position.y - substation.position.y)
     if dx <= substation.radius and dy <= substation.radius then
-      return "Line-" .. substation.unit_number
+      return "Line" .. substation.unit_number
     end
   end
   return "Isolated"
@@ -326,12 +326,12 @@ local function track_electric(asset)
   local entity = asset.entity_ref
   if not (entity and entity.valid) then return end
   if (entity.type=="electric-pole") then
-    asset.electric.electric_network_statistics = entity.electric_network_statistics
+    -- asset.electric.electric_network_statistics = entity.electric_network_statistics
     -- if electrical equipment
   elseif entity.is_connected_to_electric_network() then
     asset.electric = {
-      energy_usage = entity.prototype.energy_usage,  -- Power, Watt
-      current_energy = entity.energy,                -- Storaged energy (J)
+      energyUsage = entity.prototype.energy_usage,  -- Power, Watt
+      currentEnergy = entity.energy,                -- Storaged energy (J)
     }
   end
 end

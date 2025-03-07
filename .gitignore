@@ -4,3 +4,5 @@ __pycache__/
 log_file.txt
 .DS_Store
 .vscode/
+*.xlsx
+figure/

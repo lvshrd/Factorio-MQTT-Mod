@@ -42,7 +42,7 @@ def publish_if_changed(client, subtopic, new_payload,log_file):
     if old_payload != new_payload:
         client.publish(subtopic, new_payload)
         last_published[subtopic] = new_payload
-        log_file.write(f"Published to {subtopic}: {new_payload}\n")
+        log_file.write(f"{subtopic}: {new_payload}\n")
 
 def publish_no_matter(client, subtopic, payload,log_file):
     """
@@ -56,18 +56,20 @@ def publish_json(client, subtopic, value,log_file):
     Convert 'value' to a valid JSON string via json.dumps(...),
     then publish if changed.
     """
-    payload = json.dumps(value)  # always a valid JSON representation
-    publish_no_matter(client, subtopic, payload,log_file)
+    # always a valid JSON representation
+    payload = json.dumps(value) 
+    #publish_if_changed is mainly used unless u want to test, then you can use publish_no_matter
+    publish_if_changed(client, subtopic, payload,log_file) 
 
 # 1) Category map
 TYPE_TO_CATEGORY = {
     "assembling-machine": "Assembly",
     "furnace":            "Smelting",
     "mining-drill":       "Mining",
-    "boiler":             "PowerGeneration",
-    "pump":               "PowerGeneration",
-    "generator":          "PowerGeneration",
-    "electric-pole":      "PowerGeneration",
+    "boiler":             "Power",
+    "pump":               "Power",
+    "generator":          "Power",
+    "electric-pole":      "Power",
     "container":          "Storage",
     "logistic-container": "Storage",
     "car":                "Transport",
@@ -160,41 +162,53 @@ def publish_asset_data(client, asset,log_file):
 
     asset_type = asset.get("type", "unknown")
     category   = TYPE_TO_CATEGORY.get(asset_type, "other")
-    type_slug  = asset_type.replace('-', '_')
+    type_slug  = asset_type.replace('-', '')
     line_id = asset.get("line_id", "Isolated")  # Get Line ID，default "Isolated"
-    type_plus_id = type_slug + "-" + str(asset_id)
+    type_plus_id = type_slug + str(asset_id)
 
     base_topic = f"{TOPIC_PREFIX}/{category}/{line_id}/{type_plus_id}"
 
     # 1) Basic info
-    publish_json(client, f"{base_topic}/id", str(asset_id),log_file)
-    publish_json(client, f"{base_topic}/name", asset.get("name", "unknown_name"),log_file)
-    publish_json(client, f"{base_topic}/model", asset.get("model", "unknown_model"),log_file)
-    publish_json(client, f"{base_topic}/type", asset_type,log_file)
-    publish_json(client, f"{base_topic}/position", asset.get("position", {}),log_file)
+    basic_info = {
+        "id": str(asset_id),
+        "name": asset.get("name", "unknown_name"),
+        "type": asset_type,
+    }
+    publish_json(client, f"{base_topic}/basic", basic_info, log_file)
+
+    publish_json(client, f"{base_topic}/pos", asset.get("position", {}),log_file)
 
     # 2) Status
     raw_status = asset.get("last_status", 0)
     dominant   = decode_dominant_flag(raw_status)
     all_flags  = decode_all_flags(raw_status)
-
-    publish_json(client, f"{base_topic}/status", dominant,log_file)
-    publish_json(client, f"{base_topic}/status_bitmask", raw_status,log_file)
-    publish_json(client, f"{base_topic}/status_flags", all_flags,log_file)
-
+    all_flags_str = ', '.join(all_flags)
     # state_changed_tick
     state_changed_tick = asset.get("state_changed_tick", 0)
-    publish_json(client, f"{base_topic}/state_changed_tick", state_changed_tick,log_file)
+
+    status_info = {
+        "status": dominant,
+        "statusBitmask": raw_status,
+        "allFlags": all_flags_str,
+        "stateChangedTick" : state_changed_tick
+    }
+    publish_json(client, f"{base_topic}/status", status_info,log_file)
 
     # 3) Production
     production_count       = asset.get("production_count", 0)
     production_last_update = asset.get("production_last_updated", 0)
-    publish_json(client, f"{base_topic}/production/count", production_count,log_file)
-    publish_json(client, f"{base_topic}/production/last_updated", production_last_update,log_file)
+    production_info ={
+        "count": production_count,
+        "lastUpdated": production_last_update
+    }
+    publish_json(client, f"{base_topic}/production", production_info , log_file)
 
-    # 4) Pollution
+    # 4) Pollution (Time series data)
     pollution_value = asset.get("pollution", 0.0)
-    publish_json(client, f"{base_topic}/pollution", pollution_value,log_file)
+    pollution_info={
+        "pollution": pollution_value
+    }
+    publish_json(client, f"{base_topic}/pollution", pollution_info, log_file)
 
     # 5) Inventory can be either a dict or a list, so handle both cases
     inventory = asset.get("inventory", {})
@@ -213,13 +227,12 @@ def publish_asset_data(client, asset,log_file):
     # publish_json(client, f"{base_topic}/fluids", fluids)
     # Or individually:
     for i, fluid in enumerate(fluids):
-        fluid_topic = f"{base_topic}/fluids/box_{i}"
+        fluid_topic = f"{base_topic}/fluids/box{i}"
         publish_json(client, fluid_topic, fluid if fluid else "empty",log_file)
 
     # 7) NEW: Electrical
-    electric = asset.get("electric",{})
-    electric_topic_prefix = f"{base_topic}/electric"
-    publish_json(client,f"{electric_topic_prefix}", electric, log_file)
+    electric_info = asset.get("electric",{})
+    publish_json(client, f"{base_topic}/electricity", electric_info, log_file)
 
 def main():
     client = connect_mqtt()
@@ -261,8 +274,9 @@ def main():
                             asset_groups[key] = []
                         asset_groups[key].append({"id": asset_id})
 
-                    # 2) Publish array of IDs for each (category,type_slug)
-                    publish_asset_list(client, asset_groups,log_file)
+                    # # 2) Publish array of IDs for each (category,type_slug)
+                    # publish_asset_list(client, asset_groups,log_file)
+
                     # 3) Publish subtopics for each asset
                     for asset in assets:
                         publish_asset_data(client, asset,log_file)

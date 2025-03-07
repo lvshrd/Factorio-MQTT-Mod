@@ -20,7 +20,8 @@ This project extends the original [Factorio MQTT Notify](https://github.com/inte
     ```txt
     example: Sandbox/PowerGeneration/Line-76/generator-1560/electric/current_energy
     ```
-
+3.  **Python script for EXCEL Generation** (`excelGen.py`) which is used to generate `output-$timestamp$.xlsx` for data model import in [supOS](https://supos-proveit.supos.app) IIoT platform
+    ![Excel Demo](figure/excel_demo.png)
 
 ## Installation & Usage
 
