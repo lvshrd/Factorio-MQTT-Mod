@@ -17,9 +17,10 @@
 -- corresponding to the respective substation center.
 --------------------------------------------------------------------------------
 SUBSTATION_RADIUS=9
-
+Target_Chest_Position={-0.5,19.5}
+Target_Area={{-18,13},{2,20}}
 --------------------------------------------------------------------------------
---- 1) Log all the existing entities 
+--- 1) Log all the existing entities only for the first tick
 --------------------------------------------------------------------------------
 All_entity={}
 All_entity.assets={}
@@ -267,10 +268,13 @@ local function track_inventory(asset)
   pcall(function() read_inventory(defines.inventory.chest, "chest") end)
   pcall(function() read_inventory(defines.inventory.assembling_machine_input,  "input") end)
   pcall(function() read_inventory(defines.inventory.assembling_machine_output, "output") end)
-  pcall(function() read_inventory(defines.inventory.furnace_source,  "furnace_source") end)
-  pcall(function() read_inventory(defines.inventory.furnace_result,  "furnace_result") end)
-  pcall(function() read_inventory(defines.inventory.item_main,       "main") end)
-
+  if not entity.type == "assembling-machine" then
+    pcall(function() read_inventory(defines.inventory.furnace_source,  "furnace_source") end)
+    pcall(function() read_inventory(defines.inventory.furnace_result,  "furnace_result") end)
+  end
+  if not entity.type == "container" then
+    pcall(function() read_inventory(defines.inventory.item_main,       "main") end)
+  end
   asset.inventory = inv_data
 end
 
@@ -384,7 +388,22 @@ local function build_snapshot()
   end
   return snapshot
 end
-
+--------------------------------------------------------------------------------
+-- Extra) Check the target production_count and clear before it's full
+--------------------------------------------------------------------------------
+local function clear_final_product()
+  local final_chests = game.surfaces[1].find_entities_filtered{area = Target_Area, name = "steel-chest"}
+  for _, final_chest in pairs(final_chests) do
+    local final_inventory = final_chest.get_inventory(defines.inventory.chest)
+    if final_inventory == nil then
+      return
+    end
+    if final_inventory.is_full() then
+      final_inventory.clear()
+      game.print("Cleared the final area product")
+    end
+  end
+end
 
 local function write_snapshot_to_file()
   local snapshot = build_snapshot()
@@ -396,4 +415,5 @@ local SNAPSHOT_INTERVAL = 60  -- e.g. every 60 ticks = 1 second
 script.on_nth_tick(SNAPSHOT_INTERVAL, function()
   update_all_assets()
   write_snapshot_to_file()
+  clear_final_product()
 end)

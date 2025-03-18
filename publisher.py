@@ -49,7 +49,7 @@ def publish_no_matter(client, subtopic, payload,log_file):
     Publish 'payload' to 'subtopic' unconditionally.
     """
     client.publish(subtopic, payload)
-    log_file.write(f"Published to {subtopic}: {payload}\n")
+    log_file.write(f"{subtopic}: {payload}\n")
 
 def publish_json(client, subtopic, value,log_file):
     """
@@ -60,6 +60,7 @@ def publish_json(client, subtopic, value,log_file):
     payload = json.dumps(value) 
     #publish_if_changed is mainly used unless u want to test, then you can use publish_no_matter
     publish_if_changed(client, subtopic, payload,log_file) 
+    # publish_no_matter(client, subtopic, payload,log_file)
 
 # 1) Category map
 TYPE_TO_CATEGORY = {
@@ -163,6 +164,8 @@ def publish_asset_data(client, asset,log_file):
     asset_type = asset.get("type", "unknown")
     category   = TYPE_TO_CATEGORY.get(asset_type, "other")
     type_slug  = asset_type.replace('-', '')
+    if type_slug == "assemblingmachine": # Special for assembling-machine since its too long
+        type_slug = "assem"
     line_id = asset.get("line_id", "Isolated")  # Get Line ID，default "Isolated"
     type_plus_id = type_slug + str(asset_id)
 
@@ -234,6 +237,19 @@ def publish_asset_data(client, asset,log_file):
     electric_info = asset.get("electric",{})
     publish_json(client, f"{base_topic}/electricity", electric_info, log_file)
 
+ # 创建一个临时的日志文件对象，用于收集本次的所有 topic
+class TopicCollector:
+    def __init__(self):
+        self.topics = {}
+    
+    def write(self, line):
+        # 解析行，提取 topic 和 payload
+        if ": " in line:
+            parts = line.split(": ", 1)
+            if len(parts) == 2:
+                topic, payload = parts
+                self.topics[topic] = payload
+
 def main():
     client = connect_mqtt()
     client.loop_start()
@@ -273,13 +289,10 @@ def main():
                         if key not in asset_groups:
                             asset_groups[key] = []
                         asset_groups[key].append({"id": asset_id})
-
-                    # # 2) Publish array of IDs for each (category,type_slug)
-                    # publish_asset_list(client, asset_groups,log_file)
-
-                    # 3) Publish subtopics for each asset
-                    for asset in assets:
-                        publish_asset_data(client, asset,log_file)
+                    
+                        # Publish subtopics for each asset
+                        for asset in assets:
+                            publish_asset_data(client, asset,log_file)
 
             except Exception as e:
                 print("Error parsing factory_state.json:", e)

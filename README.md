@@ -83,3 +83,6 @@ The `factory_state.json` file has a structure like:
         }
     ]
 }
+```
+**18th Mar-Update**: For demo purpose, function `clear_final_product` added to check the steel chest in the target area(car production area here) and clear them when they get full. Besides, some bugs fixed.
+![Factorio Demo](figure/factorio_demo.png)

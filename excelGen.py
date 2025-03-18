@@ -60,7 +60,7 @@ class ExcelGenerator:
         判断是否为时序数据（规则可扩展）
         :param topic: 包含关键词如 elec/fluids 或数值型数据
         """
-        if any(kw in topic for kw in ["electricity", "fluids", "pollution", "production"]):
+        if any(kw in topic for kw in ["electricity", "fluids", "pollution", "production","input","output","chest"]):
             return True
         # # 若 payload 是数值或包含数值字段
         # if isinstance(payload, (int, float)):
@@ -132,10 +132,10 @@ class ExcelGenerator:
         for idx, (topic, fields) in enumerate(self.relation_data.items(), start=start_row + len(self.folder_data)):
             if fields:  # Only write if fields is not empty
                 ws_relation.cell(row=idx, column=1, value=topic)
-                ws_relation.cell(row=idx, column=3, value=json.dumps(fields))
-                ws_relation.cell(row=idx, column=5, value="FALSE")  # autoFlow
-                ws_relation.cell(row=idx, column=6, value="TRUE")  # autoDashboard
-                ws_relation.cell(row=idx, column=7, value="TRUE")  # persistence
+                ws_relation.cell(row=idx, column=4, value=json.dumps(fields))
+                ws_relation.cell(row=idx, column=6, value="FALSE")  # autoFlow
+                ws_relation.cell(row=idx, column=7, value="TRUE")  # autoDashboard
+                ws_relation.cell(row=idx, column=8, value="TRUE")  # persistence
 
         # Sheet 3: TimeSeries (时序数据库)
         ws_timeseries = wb["TimeSeries"]
@@ -146,10 +146,10 @@ class ExcelGenerator:
         for idx, (topic, fields) in enumerate(self.timeseries_data.items(), start=start_row + len(self.folder_data)):
             if fields:  # Only write if fields is not empty
                 ws_timeseries.cell(row=idx, column=1, value=topic)
-                ws_timeseries.cell(row=idx, column=3, value=json.dumps(fields))
-                ws_timeseries.cell(row=idx, column=5, value="FALSE")  # autoFlow
-                ws_timeseries.cell(row=idx, column=6, value="TRUE")  # autoDashboard
-                ws_timeseries.cell(row=idx, column=7, value="TRUE")  # persistence (时序数据通常需要持久化)
+                ws_timeseries.cell(row=idx, column=4, value=json.dumps(fields))
+                ws_timeseries.cell(row=idx, column=6, value="FALSE")  # autoFlow
+                ws_timeseries.cell(row=idx, column=7, value="TRUE")  # autoDashboard
+                ws_timeseries.cell(row=idx, column=8, value="TRUE")  # persistence (时序数据通常需要持久化)
 
         wb.save(self.output_filename)
         print(f"Excel generated successfully: {self.output_filename}")
