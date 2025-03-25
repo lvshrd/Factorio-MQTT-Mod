@@ -93,7 +93,6 @@ local function register_asset(entity)
   global.assets[entity.unit_number] = {
     unit_number            = entity.unit_number,
     name                   = entity.name,
-    model                  = entity.name,
     type                   = entity.type,
     position               = {x = entity.position.x, y = entity.position.y},
 
@@ -368,7 +367,6 @@ local function build_snapshot()
       table.insert(snapshot.assets, {
         unit_number            = asset.unit_number,
         name                   = asset.name,
-        model                  = asset.model,
         type                   = asset.type,
         position               = asset.position,
         line_id                = line_id,  -- New Added
@@ -388,6 +386,7 @@ local function build_snapshot()
   end
   return snapshot
 end
+
 --------------------------------------------------------------------------------
 -- Extra) Check the target production_count and clear before it's full
 --------------------------------------------------------------------------------

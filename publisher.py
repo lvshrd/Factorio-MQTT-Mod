@@ -17,7 +17,7 @@
 # FACTORY_STATE_FILE = "/path/to/factory_state.json"                #
 # BROKER = "mqtt://broker_ip"                                       #
 # PORT = 1883                                                       #
-# TOPIC_PREFIX = "Factorio/demo/test"                               #
+# TOPIC_PREFIX = "Factorio/Sandbox"                            #
 # ADMIN = "mqtt_username"                                           #        
 # PASSWORD  = "mqtt_password"                                       #
 # LOG_FILE = "/path/to/log_file.txt"                                #
