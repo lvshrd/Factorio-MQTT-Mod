@@ -11,24 +11,29 @@
 # - Asset data for each asset                                       #
 #                                                                   #
 # To leverage this script, you need to have a running MQTT          #
-# broker to which the data will be published. A config.py file in   #
-# the same directory with the following variables is also needed.   #
-#                                                                   #
-# FACTORY_STATE_FILE = "/path/to/factory_state.json"                #
-# BROKER = "mqtt://broker_ip"                                       #
-# PORT = 1883                                                       #
-# TOPIC_PREFIX = "Factorio/Sandbox"                            #
-# ADMIN = "mqtt_username"                                           #        
-# PASSWORD  = "mqtt_password"                                       #
-# LOG_FILE = "/path/to/log_file.txt"                                #
+# broker to which the data will be published. Rename                #
+# config.toml.example to config.toml and fill in the values to use. #
 #####################################################################
-
 import time
 import os
 import json
+import toml
 from paho.mqtt import client as mqtt_client
-from config import FACTORY_STATE_FILE, BROKER, PORT, TOPIC_PREFIX, ADMIN, PASSWORD, LOG_FILE
 
+try:
+    config = toml.load("config.toml")
+except Exception as e:
+    print(f"Error loading config.toml: {e}")
+    exit(1)
+
+# Get values from config.toml
+FACTORY_STATE_FILE = config['paths']['factory_state_file']
+BROKER = config['mqtt']['broker']
+PORT = config['mqtt']['port']
+TOPIC_PREFIX = config['mqtt']['topic_prefix']
+ADMIN = config['mqtt']['username']
+PASSWORD = config['mqtt']['password']
+LOG_FILE = config['paths']['log_file']
 
 # Keep track of last published values for each subtopic, so we only publish if changed
 last_published = {}
@@ -134,11 +139,16 @@ def on_connect(client, userdata, flags, reason_code, properties=None):
 
 def connect_mqtt():
     client = mqtt_client.Client()
-    client.username_pw_set(ADMIN, PASSWORD)
-    client.on_connect = on_connect
-    client.connect(BROKER, PORT, keepalive=60)
-    print("Connecting to MQTT broker...")
-    return client
+    try:
+        if ADMIN and PASSWORD:
+            client.username_pw_set(ADMIN, PASSWORD)
+        client.on_connect = on_connect
+        client.connect(BROKER, PORT, keepalive=60)
+        print("Connecting to MQTT broker...")
+        return client
+    except Exception as e:
+        print(f"Error connecting to MQTT broker: {e}")
+        exit(1)
 
 def publish_asset_list(client, asset_groups,log_file):
     """
@@ -237,13 +247,13 @@ def publish_asset_data(client, asset,log_file):
     electric_info = asset.get("electric",{})
     publish_json(client, f"{base_topic}/electricity", electric_info, log_file)
 
- # 创建一个临时的日志文件对象，用于收集本次的所有 topic
+# Create a temp log file object, used to collect all the topic from this time
 class TopicCollector:
     def __init__(self):
         self.topics = {}
     
     def write(self, line):
-        # 解析行，提取 topic 和 payload
+        # Decode lines, extract topic and payload
         if ": " in line:
             parts = line.split(": ", 1)
             if len(parts) == 2:
@@ -259,6 +269,7 @@ def main():
     while True:
         time.sleep(2)
         if not os.path.exists(FACTORY_STATE_FILE):
+            print(f"Error: {FACTORY_STATE_FILE} does not exist")
             continue
         mtime = os.path.getmtime(FACTORY_STATE_FILE)
         if mtime > last_mtime:

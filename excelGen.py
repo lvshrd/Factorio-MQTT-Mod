@@ -30,15 +30,15 @@ class ExcelGenerator:
     def __init__(self, template_filename, output_filename):
         self.template_filename = template_filename
         self.output_filename = output_filename
-        self.folder_data = set()       # 使用集合避免重复
+        self.folder_data = set()       # Set to avoid duplicate
         self.relation_data = {}        # Relation Sheet: {topic: fields}
         self.timeseries_data = {}      # TimeSeries Sheet: {topic: fields}
 
     def add_topic(self, full_topic, payload):
         """
-        分析 Topic 并填充到三个工作表中
-        :param full_topic: 完整 Topic 路径，例如 Factorio/demo/test/Power/Line76/generator1578/elec
-        :param payload: 该 Topic 对应的 JSON 数据
+        Analyze Topic and fill into three sheets
+        :param full_topic: Full Topic path, eg Factorio/demo/test/Power/Line76/generator1578/elec
+        :param payload: The JSON data corresponding to the Topic
         """
         # 1. 处理 Folder Sheet（目录层级）
         parts = full_topic.split('/')
@@ -57,8 +57,8 @@ class ExcelGenerator:
 
     def _is_timeseries(self, topic, payload):
         """
-        判断是否为时序数据（规则可扩展）
-        :param topic: 包含关键词如 elec/fluids 或数值型数据
+        Determine if it is time series data (rules can be extended)
+        :param topic: Contains keywords like elec/fluids or numeric data
         """
         if any(kw in topic for kw in ["electricity", "fluids", "pollution", "production","input","output","chest"]):
             return True
@@ -70,21 +70,21 @@ class ExcelGenerator:
         return False
 
     def _add_to_relation(self, topic, payload):
-        """添加到关系数据库表"""
+        """Add to relation database table"""
         fields = self._extract_fields(payload)
         if fields:  # Only add if fields is not empty
             self.relation_data[topic] = fields
 
     def _add_to_timeseries(self, topic, payload):
-        """添加到时序数据库表"""
+        """Add to time series database table"""
         fields = self._extract_fields(payload)
         if fields:  # Only add if fields is not empty
             self.timeseries_data[topic] = fields
 
     def _extract_fields(self, payload):
         """
-        从 JSON 数据中提取字段名和类型
-        :return: 格式如 [{"name": "x", "type": "float"}, ...]
+        Extract field names and types from JSON data
+        :return: Format like [{"name": "x", "type": "float"}, ...]
         """
         fields = []
         if isinstance(payload, dict):
@@ -101,7 +101,7 @@ class ExcelGenerator:
         return fields
 
     def _infer_type(self, value):
-        """推断字段类型"""
+        """Infer field type"""
         if isinstance(value, int):
             return "long" if value > 2147483647 else "int"
         elif isinstance(value, float):
@@ -117,18 +117,18 @@ class ExcelGenerator:
         shutil.copyfile(self.template_filename, self.output_filename)
         wb = load_workbook(self.output_filename)
 
-        # Sheet 1: Folder (目录层级)
+        # Sheet 1: Folder (Folder hierarchy)
         ws_folder = wb["Folder"]
         start_row = 5
         for idx, path in enumerate(sorted(self.folder_data), start=start_row):
             ws_folder.cell(row=idx, column=1, value=path)
 
-        # Sheet 2: Relation (关系数据库)
+        # Sheet 2: Relation (Relation database)
         ws_relation = wb["relation"]
         for idx, path in enumerate(sorted(self.folder_data), start=start_row):
             ws_relation.cell(row=idx, column=1, value=path)
         
-        # 添加具体 Topic
+        # Add specific Topic
         for idx, (topic, fields) in enumerate(self.relation_data.items(), start=start_row + len(self.folder_data)):
             if fields:  # Only write if fields is not empty
                 ws_relation.cell(row=idx, column=1, value=topic)
@@ -137,19 +137,19 @@ class ExcelGenerator:
                 ws_relation.cell(row=idx, column=7, value="TRUE")  # autoDashboard
                 ws_relation.cell(row=idx, column=8, value="TRUE")  # persistence
 
-        # Sheet 3: TimeSeries (时序数据库)
+        # Sheet 3: TimeSeries (Time series database)
         ws_timeseries = wb["TimeSeries"]
         for idx, path in enumerate(sorted(self.folder_data), start=start_row):
             ws_timeseries.cell(row=idx, column=1, value=path)
         
-        # 添加具体 Topic
+        # Add specific Topic
         for idx, (topic, fields) in enumerate(self.timeseries_data.items(), start=start_row + len(self.folder_data)):
             if fields:  # Only write if fields is not empty
                 ws_timeseries.cell(row=idx, column=1, value=topic)
                 ws_timeseries.cell(row=idx, column=4, value=json.dumps(fields))
                 ws_timeseries.cell(row=idx, column=6, value="FALSE")  # autoFlow
                 ws_timeseries.cell(row=idx, column=7, value="TRUE")  # autoDashboard
-                ws_timeseries.cell(row=idx, column=8, value="TRUE")  # persistence (时序数据通常需要持久化)
+                ws_timeseries.cell(row=idx, column=8, value="TRUE")  # persistence (Time series data usually needs persistence)
 
         wb.save(self.output_filename)
         print(f"Excel generated successfully: {self.output_filename}")
@@ -160,9 +160,9 @@ def main():
     excel_gen = ExcelGenerator(template_filename, output_filename)  # Initialize Excel generator
     with open(LOG_FILE, "r") as log_file:
         for row in log_file:
-            row = row.strip()  # 去掉换行符
+            row = row.strip()  # Remove newline characters
             if ': ' in row:
-                topic, msg = row.split(': ', 1)  # 确保只分割第一个 ': '
+                topic, msg = row.split(': ', 1)  # Ensure only the first ': ' is split
                 excel_gen.add_topic(topic, json.loads(msg))
     excel_gen.save_excel()        
 

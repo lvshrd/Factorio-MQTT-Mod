@@ -32,7 +32,7 @@ This project extends the original [Factorio MQTT Notify](https://github.com/inte
 
 ### Python Script
 
-1.  Install Python 3.
+1.  Install Python 3.11
 2.  From this folder, create a virtual environment (optional) and install dependencies:
 
     ```bash
@@ -40,16 +40,8 @@ This project extends the original [Factorio MQTT Notify](https://github.com/inte
     source .venv/bin/activate  # or .\.venv\Scripts\activate on Windows
     pip install paho-mqtt==2.1.0
     ```
-3. Create `config.py` in this directory and address following variables:
-    ```python
-    FACTORY_STATE_FILE = "/path/to/factory_state.json"                
-    BROKER = "mqtt://broker_ip"                                       
-    PORT = 1883                                                       
-    TOPIC_PREFIX = "Factorio/demo"                               
-    ADMIN = "mqtt_username"                                                   
-    PASSWORD  = "mqtt_password"                                       
-    LOG_FILE = "/path/to/log_file.txt"  
-    ```
+3. Edit `config.toml` in this directory and address config parameters.
+
 4.  Run `publisher.py`:
 
     ```bash
