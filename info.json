@@ -1,9 +1,9 @@
 {
     "name": "sup-MQTT",
     "version": "1.2.1",
-    "title": "sup-MQTT",
+    "title": "supOS-agent",
     "author": "lvshrd",
-    "description": "Maintains a single JSON snapshot of production, inventories, pollution, and fluid info for tracked assets.",
+    "description": "A lightweight MQTT-based agent system for Factorio that monitors game state (production, inventories, pollution, fluids) and integrates with supOS Node-RED workflows for IIoT applications.",
     "factorio_version": "2.0",
     "dependencies": ["base"]
   }

@@ -1,0 +1,23 @@
+[paths]
+factory_state_file = "~/Library/Application Support/factorio/script-output/factory_state.json"
+log_file = "log_file.txt"
+
+[mqtt]
+broker = "supos-ce-instance1.supos.app"
+port = 1883
+topic_prefix = "Factorio/Sandbox"
+username = ""
+password = "" 
+client_id = "factorio_subscriber"
+command_topic = "Factorio/Commands"
+response_topic = "Factorio/Responses"
+plan_topic = "Factorio/Plans"
+
+[rcon]
+host = "127.0.0.1"
+port = 8088
+password = "lvshrd"
+
+[logging]
+level = "INFO"
+file = "factorio_agent.log"

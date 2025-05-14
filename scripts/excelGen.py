@@ -2,34 +2,27 @@
 # The excel should include a `folder` sheet and the corresponding DB sheet, eg `relation`, `TimeSeries`
 # All the data model structure is needed for each single topic, eg for 'Factorio/Sandbox/Smelting/Line2530/furnace2415/elec'
 # It needs blank rows like `Factorio/Sandbox/`, `Factorio/Sandbox/Smelting/`, `Factorio/Sandbox/Smelting/Line2530/`, etc.
-# The main components of the script are:
-# 1. ExcelGenerator class:
-#     - Initializes with a template Excel file and an output filename.
-#     - Analyzes topics and payloads to categorize them into folder hierarchy, relation data, and time series data.
-#     - Saves the categorized data into an Excel file with three sheets: Folder, Relation, and TimeSeries.
-# 2. add_topic method:
-#     - Analyzes a given topic and its payload.
-#     - Categorizes the topic into folder hierarchy, relation data, or time series data based on predefined rules.
-# 3. save_excel method:
-#     - Copies the template Excel file to the output filename.
-#     - Writes the categorized data into the respective sheets in the Excel file.
-# 4. main function:
-#     - Reads a log file containing topics and payloads.
-#     - Uses the ExcelGenerator to process each topic and payload.
-#     - Saves the processed data into an Excel file.
-
     
 from openpyxl import load_workbook
 import json
 import os
-from config import LOG_FILE
+import toml
 import shutil
 from datetime import datetime
 
+try:
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    config_path = os.path.join(script_dir, "config.toml")
+    config = toml.load(config_path)
+except Exception as e:
+    print(f"Error loading config.toml: {e}")
+    exit(1)
+LOG_FILE = os.path.join(script_dir, config["paths"]["log_file"])
+
 class ExcelGenerator:
     def __init__(self, template_filename, output_filename):
-        self.template_filename = template_filename
-        self.output_filename = output_filename
+        self.template_filename = os.path.join(script_dir, template_filename)
+        self.output_filename = os.path.join(script_dir,output_filename)
         self.folder_data = set()       # Set to avoid duplicate
         self.relation_data = {}        # Relation Sheet: {topic: fields}
         self.timeseries_data = {}      # TimeSeries Sheet: {topic: fields}
@@ -158,13 +151,16 @@ def main():
     template_filename = "template.xlsx"
     output_filename = f"output-{datetime.now().strftime('%Y%m%d%H%M')}.xlsx"
     excel_gen = ExcelGenerator(template_filename, output_filename)  # Initialize Excel generator
-    with open(LOG_FILE, "r") as log_file:
-        for row in log_file:
-            row = row.strip()  # Remove newline characters
-            if ': ' in row:
-                topic, msg = row.split(': ', 1)  # Ensure only the first ': ' is split
-                excel_gen.add_topic(topic, json.loads(msg))
-    excel_gen.save_excel()        
+    try:
+        with open(LOG_FILE, "r") as log_file:
+            for row in log_file:
+                row = row.strip()  # Remove newline characters
+                if ': ' in row:
+                    topic, msg = row.split(': ', 1)  # Ensure only the first ': ' is split
+                    excel_gen.add_topic(topic, json.loads(msg))
+        excel_gen.save_excel()        
+    except Exception as e:
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
     main()

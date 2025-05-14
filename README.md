@@ -1,80 +1,71 @@
-# Factorio Mod with MQTT Notify (Modified Version)
+# Factorio MQTT Agent
 
-This project extends the original [Factorio MQTT Notify](https://github.com/intellicintegration/Factorio-MQTT-Notify) mod with enhanced features for industrial IoT (IIoT) applications. It includes:
+A lightweight version of the [Factorio Agent](https://github.com/lvshrd/factorio-agent) project, specifically designed to work with supOS Node-RED flows. This mod package focuses on MQTT-based agent system for game state monitoring and control. It extends the original [Factorio MQTT Notify](https://github.com/intellicintegration/Factorio-MQTT-Notify) mod with enhanced features for industrial IoT (IIoT) applications. Check out the [Mod Documentation](docs/README.md) for more details.
 
-1.  **Enhanced Factorio 2.0 mod** (in `control.lua` & `info.json`) that periodically generates a JSON snapshot (`factory_state.json`) with:
-    * Machine status
-    * Inventories
-    * Pollution
-    * Fluid info
-    * Production counts
-    * **Line ID assignment based on substation proximity**
-    * **Tracking of electric poles**
-    * **Generation of a global entity type table (`all_entity_types.json`) for testing**
+## Project Overview
 
-2.  **Python script for MQTT** (`publisher.py`) that monitors `factory_state.json` and publishes updates to an MQTT broker with structured JSON messages, including:
-    * **Line ID in MQTT topics**
-    * **Logging of published topics and payloads to `LOG_FILE.txt`**
-    * **Modified MQTT topic structure**
+This is a streamlined version of the original Factorio Agent project, modified to work as a Factorio mod that integrates with supOS Node-RED workflows. Instead of using the OpenAI Agent SDK directly, this version:
 
-    ```txt
-    example: Sandbox/PowerGeneration/Line-76/generator-1560/electric/current_energy
-    ```
-3.  **Python script for EXCEL Generation** (`excelGen.py`) which is used to generate `output-$timestamp$.xlsx` for data model import in [supOS](https://supos-proveit.supos.app) IIoT platform
-    ![Excel Demo](figure/excel_demo.png)
+- Publishes game state data via MQTT
+- Integrates with Node-RED for workflow automation
+- Provides a simpler, more focused implementation for supOS integration
 
-## Installation & Usage
+<p align="center">
+  <img src="docs/Node-Red_workflow.png" alt="Factorio agent using Node-Red" width="90%">
+</p>
 
-### Mod Installation
+## Technical Architecture
 
-1.  Copy all as `sup-MQTT` folder (with `control.lua` & `info.json` inside) into your Factorio `mods` directory.
-2.  Ensure your Factorio version is **2.0** or compatible with no direct `write_file` restrictions.
+- **MQTT Protocol**: Communicates game state and commands
+- **Node-RED Integration**: Provides workflow automation capabilities
+- **Factorio Runtime API**: Implements game state monitoring via Lua Factorio API
 
-### Python Script
+<p align="center">
+  <img src="docs/supMQTT_agent_structure.png" alt="Factorio agent using Node-Red" width="70%">
+</p>
 
-1.  Install Python 3.11
-2.  From this folder, create a virtual environment (optional) and install dependencies:
+## Installation Guide
 
-    ```bash
-    python -m venv .venv
-    source .venv/bin/activate  # or .\.venv\Scripts\activate on Windows
-    pip install paho-mqtt==2.1.0
-    ```
-3. Edit `config.toml` in this directory and address config parameters.
+### Prerequisites
 
-4.  Run `publisher.py`:
+- [Factorio](https://www.factorio.com/) 2.0 or above
+- Local Node-RED flow instance or example flow in [supOS](https://supos-ce-instance1.supos.app:8443/home)
 
-    ```bash
-    python publisher.py
-    ```
+1. Install the mod:
+   - Download the supOS-agent mod from the [mod portal](https://mods.factorio.com/mod/supOS-agent)
+   - Go to Factorio mods [directory](https://wiki.factorio.com/Application_directory) and unzip the mod
 
-## Mod Behavior (Enhanced)
+2. Configure the mod:
+   - Edit `config.toml` in the mod directory (You may need to change the path of the script output)
+   - **[Unnecessary]** Set your MQTT broker if u need (default supos-instance1)
 
-* When Factorio starts or loads, the mod scans for existing tracked entities (assembling machines, furnaces, mining drills, containers, **electric poles**, etc.).
-* It identifies substations and assigns a `line_id` to entities within their production areas based on proximity.
-* Every 1 second (60 ticks), it updates:
-    * Production progress
-    * Inventories
-    * Status (bitmask integer)
-    * Pollution, fluids
-    * **Line ID assignment**
-* Generates both `factory_state.json` and `all_entity_types.json` under `script-output/` .
+3. Import the Node-RED workflow:
+   - Open your supOS webpage and get the flow in example
+   - **[Unnecessary]** or Import the workflow from `docs/NodeRed Agent Flow.json` to your own NodeRed service
+   - Fill in the API key in Gemini node or DeepSeek node
 
-The `factory_state.json` file has a structure like:
+4. Configure the Factorio server:
+   - Configure the RCON port and password in `./config/config.ini` in your game directory
 
-```json
-{
-    "tick": 123456,
-    "assets": [
-        {
-            "unit_number": 14,
-            "name": "assembling-machine",
-            "type": "assembling-machine",
-            "last_status": 53,
-            "line_id": 142
-        }
-    ]
-}
+## Usage
+
+1. Create a new single freeplay game with the mod enabled (When needed, start a Multiplayer game)
+2. The mod will automatically begin collecting game state data
+3. Start bash script `start_mac_supOS.sh` or `start_windows_supOS.bat` to enable the agent system (setup python environment and start the subscriber.py and publisher.py)
+
+## Project Structure
 ```
-**18th Mar-Update**: For demo purpose, function `clear_final_product` added to check the steel chest in the target area(car production area here) and clear them when they get full. Besides, some bugs fixed.
-![Factorio Demo](figure/factorio_demo.png)
+supOS-agent/
+├── docs/
+│   └── NodeRed Agent Flow.json
+├── scripts/
+│   ├── excelGen.py   # Generate excel file containing topics structure from factorio game state
+│   ├── publisher.py
+│   ├── subscriber.py
+│   ├── api/
+│   │   ├── prototype.py
+│   │   ├── factorio_interface.py
+│   │   ├── sandbox/
+│   │   │   └── base.py          
+└── control.lua
+```

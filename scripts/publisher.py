@@ -21,19 +21,21 @@ import toml
 from paho.mqtt import client as mqtt_client
 
 try:
-    config = toml.load("config.toml")
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    config_path = os.path.join(script_dir, "config.toml")
+    config = toml.load(config_path)
 except Exception as e:
     print(f"Error loading config.toml: {e}")
     exit(1)
 
 # Get values from config.toml
-FACTORY_STATE_FILE = config['paths']['factory_state_file']
+FACTORY_STATE_FILE = os.path.expanduser(config['paths']['factory_state_file'])
 BROKER = config['mqtt']['broker']
 PORT = config['mqtt']['port']
 TOPIC_PREFIX = config['mqtt']['topic_prefix']
 ADMIN = config['mqtt']['username']
 PASSWORD = config['mqtt']['password']
-LOG_FILE = config['paths']['log_file']
+LOG_FILE = os.path.join(script_dir, config['paths']['log_file'])
 
 # Keep track of last published values for each subtopic, so we only publish if changed
 last_published = {}

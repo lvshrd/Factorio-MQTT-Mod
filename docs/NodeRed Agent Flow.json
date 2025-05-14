@@ -1,0 +1,613 @@
+[
+    {
+        "id": "63b86f156c48a127",
+        "type": "tab",
+        "label": "Factorio Agent Workflow",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "2418f906f5a18df1",
+        "type": "actions",
+        "z": "63b86f156c48a127",
+        "name": "Define Action Tool",
+        "actions": [
+            {
+                "name": "get_player_position",
+                "description": "Get the player's current position.",
+                "parameters": []
+            },
+            {
+                "name": "move_player",
+                "description": "Move the player to a specific position.",
+                "parameters": [
+                    {
+                        "name": "x",
+                        "type": "number",
+                        "description": "The x coordinate"
+                    },
+                    {
+                        "name": "y",
+                        "type": "number",
+                        "description": "The y coordinate"
+                    }
+                ]
+            },
+            {
+                "name": "search_entities",
+                "description": "Find entities in the game based on specified filters(Always use appropriate filtering parameters to avoid exceeding token limits)",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "type": "string",
+                        "description": "[Optional] Entity prototype name(s) to filter by"
+                    },
+                    {
+                        "name": "type",
+                        "type": "string",
+                        "description": "[Optional] Entity type to filter by"
+                    },
+                    {
+                        "name": "position_x",
+                        "type": "number",
+                        "description": "[Optional] X coordinate of the center of the search circle"
+                    },
+                    {
+                        "name": "position_y",
+                        "type": "number",
+                        "description": "[Optional] Y coordinate of the center of the search circle"
+                    },
+                    {
+                        "name": "radius",
+                        "type": "number",
+                        "description": "[Optional with coordinate] Radius of the search circle"
+                    },
+                    {
+                        "name": "limit",
+                        "type": "number",
+                        "description": "[Optional] Maximum number of entities to return"
+                    }
+                ]
+            },
+            {
+                "name": "place_entity",
+                "description": "Place an entity in the game surface. (Be careful about the collision area to avoid overlap)",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "type": "string",
+                        "description": "The entity prototype name to create"
+                    },
+                    {
+                        "name": "x",
+                        "type": "number",
+                        "description": "The x coordinate"
+                    },
+                    {
+                        "name": "y",
+                        "type": "number",
+                        "description": "The y coordinate"
+                    },
+                    {
+                        "name": "direction",
+                        "type": "number",
+                        "description": "The direction (0, 4, 8, 12 for N, E, S, W), default 0"
+                    }
+                ]
+            },
+            {
+                "name": "remove_entity",
+                "description": "Remove an entity from the game surface.",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "type": "string",
+                        "description": "The entity prototype name to remove"
+                    },
+                    {
+                        "name": "x",
+                        "type": "number",
+                        "description": "The x coordinate"
+                    },
+                    {
+                        "name": "y",
+                        "type": "number",
+                        "description": "The y coordinate"
+                    }
+                ]
+            },
+            {
+                "name": "insert_item",
+                "description": "Insert items into an inventory.",
+                "parameters": [
+                    {
+                        "name": "item",
+                        "type": "string",
+                        "description": "The item name to insert"
+                    },
+                    {
+                        "name": "count",
+                        "type": "number",
+                        "description": "The count of the item"
+                    },
+                    {
+                        "name": "inventory_type",
+                        "type": "string",
+                        "description": "The type of inventory to insert into"
+                    },
+                    {
+                        "name": "entity",
+                        "type": "string",
+                        "description": "The name of the entity to insert into"
+                    },
+                    {
+                        "name": "x",
+                        "type": "number",
+                        "description": "The x coordinate of the entity (if not player)"
+                    },
+                    {
+                        "name": "y",
+                        "type": "number",
+                        "description": "The y coordinate of the entity (if not player)"
+                    }
+                ]
+            },
+            {
+                "name": "remove_item",
+                "description": "Remove items from an inventory.",
+                "parameters": [
+                    {
+                        "name": "item",
+                        "type": "string",
+                        "description": "The item name to insert"
+                    },
+                    {
+                        "name": "count",
+                        "type": "number",
+                        "description": "The count of the item"
+                    },
+                    {
+                        "name": "entity",
+                        "type": "string",
+                        "description": "The name of the entity to remove from"
+                    },
+                    {
+                        "name": "x",
+                        "type": "number",
+                        "description": "The x coordinate of the entity (if not player)"
+                    },
+                    {
+                        "name": "y",
+                        "type": "number",
+                        "description": "The y coordinate of the entity (if not player)"
+                    }
+                ]
+            },
+            {
+                "name": "get_inventory",
+                "description": "Get inventory contents.",
+                "parameters": [
+                    {
+                        "name": "inventory_type",
+                        "type": "string",
+                        "description": "The type of inventory to get"
+                    },
+                    {
+                        "name": "entity",
+                        "type": "string",
+                        "description": "The name of the entity to get from"
+                    },
+                    {
+                        "name": "x",
+                        "type": "number",
+                        "description": "The x coordinate of the entity (if not player)"
+                    },
+                    {
+                        "name": "y",
+                        "type": "number",
+                        "description": "The y coordinate of the entity (if not player)"
+                    }
+                ]
+            },
+            {
+                "name": "list_supported_entities",
+                "description": "Get a list of all supported entities with their info including dimensions and description ,etc.",
+                "parameters": [
+                    {
+                        "name": "mode",
+                        "type": "string",
+                        "description": "Search mode - default \"all\" for all entities names list, \"type\" for entities of specific type with info, \"search\" for keyword search with info"
+                    },
+                    {
+                        "name": "search_type",
+                        "type": "string",
+                        "description": "When mode=\"type\", specify the entity type to filter"
+                    },
+                    {
+                        "name": "keyword",
+                        "type": "string",
+                        "description": "When mode=\"search\", specify the keyword to search entity names"
+                    }
+                ]
+            },
+            {
+                "name": "list_supported_items",
+                "description": "Get a list of all supported items, may not be all items in the game",
+                "parameters": []
+            },
+            {
+                "name": "find_surface_tile",
+                "description": "Find surface tiles in the current game based on specified filters",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "type": "string",
+                        "description": "[Optional] Tile name to filter by (eg: water, dry-dirt, then the middle is shore)"
+                    },
+                    {
+                        "name": "position_x",
+                        "type": "number",
+                        "description": "[Optional] X coordinate of the center of the search circle"
+                    },
+                    {
+                        "name": "position_y",
+                        "type": "number",
+                        "description": "[Optional] Y coordinate of the center of the search circle"
+                    },
+                    {
+                        "name": "radius",
+                        "type": "number",
+                        "description": "[Optional with coordinate] Radius of the search circle"
+                    },
+                    {
+                        "name": "limit",
+                        "type": "number",
+                        "description": "[Optional] Maximum number of tiles to return"
+                    }
+                ]
+            }
+        ],
+        "agentNode": "global",
+        "x": 370,
+        "y": 500,
+        "wires": []
+    },
+    {
+        "id": "d29e1f679cc5bb01",
+        "type": "factory-agent-states",
+        "z": "63b86f156c48a127",
+        "name": "Agent Prompt",
+        "systemPrompt": "You are an expert Factorio player, interfacing with the game via API tools. Your objective is to efficiently manage and enlarge the automative factory. You can place or insert any legal things that exists in Factorio if you want, but try to move player there before doing something! Your responses must be strictly in JSON format with a \"plan\" describing the next step and a maximum of 3 \"actions\" to be executed. \ne.g. {\"plan\": \"Set up power generation plant; Find location of shore to place offshore-pump first, use find_surface_tile() and place_entity()\",\n  \"actions\": [\n    {\n      \"command\": \"place_entity\",\n      \"params\": {\n        \"name\": \"steam-engine\",\n        \"x\": 12,\n        \"y\": 20,\n        \"direction\": \"4\"\n      }, ...\n    }\n  ]\n}\nGeneral Guidelines: 1. Focus on automating the flow of resources using belts and inserters. 2. Group similar buildings together (e.g., all stone furnaces in one area, all burner mining drills on a single patch). Plan for potential belt routing.",
+        "environmentDescription": "The current map features abundant iron and copper ore resources. You are starting with a completely empty map. Your immediate priority is to establish a basic burner-driven power generation and coal mining setup to begin automating the factory. Remember that you can only interact with the game world through the provided API action tools. Ensure that the JSON object is the only valid object within your response. Limit the number of actions to a maximum of three per response.",
+        "initialDelay": "2",
+        "x": 420,
+        "y": 580,
+        "wires": [
+            [
+                "39ce0b1a89deda24",
+                "c679baf29aa29b75"
+            ]
+        ]
+    },
+    {
+        "id": "e97f969ed554994a",
+        "type": "inject",
+        "z": "63b86f156c48a127",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"state\": \"No response yet\"}",
+        "payloadType": "json",
+        "x": 110,
+        "y": 740,
+        "wires": [
+            [
+                "90eee5d5f1beee77",
+                "0970ef49aad65cc6"
+            ]
+        ]
+    },
+    {
+        "id": "7459a04652bdcf8a",
+        "type": "mqtt in",
+        "z": "63b86f156c48a127",
+        "name": "",
+        "topic": "Factorio/Sandbox/#",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "6f6a71de9985f35d",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 110,
+        "y": 640,
+        "wires": [
+            [
+                "90eee5d5f1beee77"
+            ]
+        ]
+    },
+    {
+        "id": "21bce0c76f6d0b49",
+        "type": "mqtt out",
+        "z": "63b86f156c48a127",
+        "name": "",
+        "topic": "Factorio/Commands",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "6f6a71de9985f35d",
+        "x": 1020,
+        "y": 660,
+        "wires": []
+    },
+    {
+        "id": "68c8874f27d25ec4",
+        "type": "function",
+        "z": "63b86f156c48a127",
+        "name": "Extract Command",
+        "func": "try {\n  const content = msg.result.replace('```json\\n','').replace('```','');\n  const contentJson = JSON.parse(content);\n  const actions = contentJson.actions;\n\n  actions.forEach(action => {\n    const newMsg = {\n      payload: {\n        command: action.command,\n        params: action.params\n      }\n    };\n    node.send(newMsg); // 使用 node.send() 发送单独的消息\n  });\n\n  return null;\n\n} catch (error) {\n  node.error(\"Error parsing JSON: \" + error);\n  return null;\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 790,
+        "y": 560,
+        "wires": [
+            [
+                "7efd6757bb078b7f",
+                "21bce0c76f6d0b49"
+            ]
+        ]
+    },
+    {
+        "id": "7efd6757bb078b7f",
+        "type": "debug",
+        "z": "63b86f156c48a127",
+        "name": "debug 4",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1020,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "f895f025ae7d891d",
+        "type": "mqtt in",
+        "z": "63b86f156c48a127",
+        "name": "",
+        "topic": "Factorio/Responses",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "6f6a71de9985f35d",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 130,
+        "y": 560,
+        "wires": [
+            [
+                "90eee5d5f1beee77"
+            ]
+        ]
+    },
+    {
+        "id": "39ce0b1a89deda24",
+        "type": "debug",
+        "z": "63b86f156c48a127",
+        "name": "debug 3",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 640,
+        "y": 500,
+        "wires": []
+    },
+    {
+        "id": "90eee5d5f1beee77",
+        "type": "function",
+        "z": "63b86f156c48a127",
+        "name": "function 2",
+        "func": "return msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 320,
+        "y": 700,
+        "wires": [
+            [
+                "d29e1f679cc5bb01"
+            ]
+        ]
+    },
+    {
+        "id": "fc044ca934fadc4a",
+        "type": "debug",
+        "z": "63b86f156c48a127",
+        "name": "debug 5",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 800,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "c679baf29aa29b75",
+        "type": "factory-agent-gemini",
+        "z": "63b86f156c48a127",
+        "name": "Gemini Player",
+        "model": "gemini-2.0-flash-lite",
+        "temperature": 0.7,
+        "maxTokens": "8192",
+        "x": 580,
+        "y": 720,
+        "wires": [
+            [
+                "fc044ca934fadc4a",
+                "68c8874f27d25ec4",
+                "aeb1018fa42fe9e9"
+            ]
+        ]
+    },
+    {
+        "id": "0970ef49aad65cc6",
+        "type": "function",
+        "z": "63b86f156c48a127",
+        "name": "Extract actions failed",
+        "func": "// // 读取全局变量\n// const globalContext = global;\n// const actionsObj = globalContext.get(\"action\");\n// let actionsStr = \"\";\n\n// // 处理 actions 并转换为可读格式\n// if (actionsObj && actionsObj.actions) {\n//     const actionNames = Object.keys(actionsObj.actions);\n//     actionsStr = actionNames.map(name => {\n//         const params = actionsObj.actions[name].parameters || {};\n//         const paramStr = Object.entries(params).map(([key, val]) => `${key}: ${val.type}`).join(\", \");\n//         return `- ${name}(${paramStr})`;\n//     }).join(\"\\n\");\n// } else {\n//     actionsStr = \"No defined actions.\";\n// }\n\n// // 拼接最终 msg.payload（发给 LLM 的用户消息）\n// msg.payload = ` Actions\n// ${actionsStr}\n// `;\n\n// node.warn(\"Available Actions:\\n\" + actionsStr);\n\n// return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 320,
+        "y": 800,
+        "wires": [
+            [
+                "f8a2284edfcf98a9"
+            ]
+        ]
+    },
+    {
+        "id": "f8a2284edfcf98a9",
+        "type": "debug",
+        "z": "63b86f156c48a127",
+        "name": "debug 6",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 540,
+        "y": 800,
+        "wires": []
+    },
+    {
+        "id": "aeb1018fa42fe9e9",
+        "type": "function",
+        "z": "63b86f156c48a127",
+        "name": "Extract Plan",
+        "func": "try {\n  const content = msg.result.replace('```json\\n','').replace('```','');\n  const contentJson = JSON.parse(content);\n  const plan = contentJson.plan;\n\n  const newMsg = {\n    payload: plan\n  };\n  return newMsg;\n\n} catch (error) {\n  node.error(\"Error parsing JSON: \" + error);\n  return null;\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 810,
+        "y": 800,
+        "wires": [
+            [
+                "e036979cc91db9a0",
+                "b1bdb1ad7b15e37a"
+            ]
+        ]
+    },
+    {
+        "id": "e036979cc91db9a0",
+        "type": "mqtt out",
+        "z": "63b86f156c48a127",
+        "name": "",
+        "topic": "Factorio/Plans",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "6f6a71de9985f35d",
+        "x": 1000,
+        "y": 740,
+        "wires": []
+    },
+    {
+        "id": "b1bdb1ad7b15e37a",
+        "type": "debug",
+        "z": "63b86f156c48a127",
+        "name": "debug 1",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1000,
+        "y": 820,
+        "wires": []
+    },
+    {
+        "id": "6f6a71de9985f35d",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "supos-ce-instance1.supos.app",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    }
+]

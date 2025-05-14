@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
 log_file.txt
-.DS_Store
 .vscode/
-*.xlsx
+*.log
+**/.DS_Store
+**/__pycache__

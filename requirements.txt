@@ -1,0 +1,3 @@
+toml @ file:///home/conda/feedstock_root/build_artifacts/toml_1734091811753/work
+factorio-rcon-py==2.1.3
+fuzzywuzzy==0.18.0
