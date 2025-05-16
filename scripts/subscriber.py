@@ -18,7 +18,7 @@ import os
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
-    filename=os.path.join('factorio_mqtt.log')
+    filename='factorio_mqtt.log'
 )
 logger = logging.getLogger('factorio_mqtt')
 
@@ -111,6 +111,13 @@ class FactorioMQTTSubscriber:
                 result = self.factorio.place_entity(name, x, y, direction)
                 self.publish_result(client, command, result)
             
+            elif command == "remove_entity":
+                name = params.get("name")
+                x = params.get("x")
+                y = params.get("y")
+                result = self.factorio.remove_entity(name, x, y)
+                self.publish_result(client, command, result)
+            
             elif command == "search_entities":
                 name = params.get("name")
                 entity_type = params.get("type")
@@ -148,13 +155,25 @@ class FactorioMQTTSubscriber:
                 self.publish_result(client, command, result)
             
             elif command == "list_supported_entities":
-                result = self.factorio.list_supported_entities()
+                mode = params.get("mode", "all")
+                search_type = params.get("search_type")
+                keyword = params.get("keyword")
+                result = self.factorio.list_supported_entities(mode, search_type, keyword)
                 self.publish_result(client, command, result)
             
             elif command == "list_supported_items":
                 result = self.factorio.list_supported_items()
                 self.publish_result(client, command, result)
-            
+
+            elif command == "find_surface_tile":
+                name = params.get("name")
+                position_x = params.get("position_x")
+                position_y = params.get("position_y")
+                radius = params.get("radius", 10)
+                limit = params.get("limit", 25)
+                result = self.factorio.find_surface_tile(name, position_x, position_y, radius, limit=limit)
+                self.publish_result(client, command, result)
+                
             else:
                 logger.warning(f"Unknown command: {command}")
                 self.publish_result(client, command, {"error": f"Unknown command: {command}"}, success=False)
