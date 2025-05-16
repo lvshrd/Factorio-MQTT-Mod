@@ -2,6 +2,10 @@
 
 A lightweight version of the [Factorio Agent](https://github.com/lvshrd/factorio-agent) project, specifically designed to work with supOS Node-RED flows. This mod package focuses on MQTT-based agent system for game state monitoring and control. It extends the original [Factorio MQTT Notify](https://github.com/intellicintegration/Factorio-MQTT-Notify) mod with enhanced features for industrial IoT (IIoT) applications. Check out the [Mod Documentation](docs/README.md) for more details.
 
+<p align="center">
+  <img src="docs/agent_demo.gif" alt="Factorio agent demo" width="70%">
+</p>
+
 ## Project Overview
 
 This is a streamlined version of the original Factorio Agent project, modified to work as a Factorio mod that integrates with supOS Node-RED workflows. Instead of using the OpenAI Agent SDK directly, this version:

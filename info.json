@@ -1,6 +1,6 @@
 {
     "name": "sup-MQTT",
-    "version": "1.2.1",
+    "version": "1.3.2",
     "title": "supOS-agent",
     "author": "lvshrd",
     "description": "A lightweight MQTT-based agent system for Factorio that monitors game state (production, inventories, pollution, fluids) and integrates with supOS Node-RED workflows for IIoT applications.",
