@@ -13,8 +13,12 @@ else
 fi
 
 # Get current directory
-FACTORIO_MOD_DIR="$HOME/Library/Application Support/factorio/mods/sup-MQTT/scripts"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+FACTORIO_MOD_DIR="${SCRIPT_DIR}/scripts"
 
 # Start two python scripts
 osascript -e "tell application \"Terminal\" to do script \"cd '$FACTORIO_MOD_DIR' && conda activate factorio_agent_env && python subscriber.py\""
 osascript -e "tell application \"Terminal\" to do script \"cd '$FACTORIO_MOD_DIR' && conda activate factorio_agent_env && python publisher.py\""
+
+# 关闭当前终端窗口
+osascript -e 'tell application "Terminal" to close every window whose name contains "start_mac.sh"'

@@ -36,7 +36,7 @@ This is a streamlined version of the original Factorio Agent project, modified t
 - Local Node-RED flow instance or example flow in [supOS](https://supos-ce-instance1.supos.app:8443/home)
 
 1. Install the mod:
-   - Download the supOS-agent mod from the [mod portal](https://mods.factorio.com/mod/supOS-agent)
+   - Download the supOS-agent mod from the [mod portal](https://mods.factorio.com/mod/sup-MQTT)
    - Go to Factorio mods [directory](https://wiki.factorio.com/Application_directory) and unzip the mod
 
 2. Configure the mod:
@@ -55,7 +55,7 @@ This is a streamlined version of the original Factorio Agent project, modified t
 
 1. Create a new single freeplay game with the mod enabled (When needed, start a Multiplayer game)
 2. The mod will automatically begin collecting game state data
-3. Start bash script `start_mac_supOS.sh` or `start_windows_supOS.bat` to enable the agent system (setup python environment and start the subscriber.py and publisher.py)
+3. Start bash script `start_mac.sh` or `start_win.bat` to enable the agent system (setup python environment and start the subscriber.py and publisher.py)
 
 ## Project Structure
 ```
