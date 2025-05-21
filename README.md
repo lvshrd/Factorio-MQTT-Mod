@@ -24,8 +24,11 @@ This is a streamlined version of the original Factorio Agent project, modified t
 - **Node-RED Integration**: Provides workflow automation capabilities
 - **Factorio Runtime API**: Implements game state monitoring via Lua Factorio API
 
-<p align="center">
-  <img src="docs/supMQTT_agent_structure.png" alt="Factorio agent using Node-Red" width="70%">
+<p align="center" style="display: inline-block; width: 48%;">
+  <img src="docs/supMQTT_agent_structure.png" alt="Factorio agent using Node-Red" width="100%">
+</p>
+<p align="center" style="display: inline-block; width: 48%;">
+  <img src="docs/Data Flow Between Systems in Retro Style.png" alt="Data Flow Between Systems" width="100%">
 </p>
 
 ## Installation Guide
